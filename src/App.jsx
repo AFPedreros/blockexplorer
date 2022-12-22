@@ -1,8 +1,6 @@
 import { Alchemy, Network } from "alchemy-sdk";
 import { useEffect, useState } from "react";
 
-import "./App.css";
-
 // Refer to the README doc for more information about using API
 // keys in client-side code. You should never do this in production
 // level code.
@@ -20,6 +18,9 @@ const alchemy = new Alchemy(settings);
 
 function App() {
     const [blockNumber, setBlockNumber] = useState();
+    const [transactions, setTransactions] = useState();
+
+    let formatted = 0;
 
     useEffect(() => {
         async function getBlockNumber() {
@@ -27,9 +28,75 @@ function App() {
         }
 
         getBlockNumber();
-    });
+    }, []);
 
-    return <div className="App">Block Number: {blockNumber}</div>;
+    useEffect(() => {
+        async function getBlockTransactions() {
+            setTransactions(
+                await alchemy.core.getBlockWithTransactions(blockNumber)
+            );
+        }
+
+        getBlockTransactions();
+    }, []);
+
+    if (transactions) {
+        const baseFee = parseInt(transactions.baseFeePerGas._hex, 16);
+        const rounded = Math.round(baseFee * 100) / 100000000000;
+        formatted = rounded.toFixed(2);
+    }
+
+    return (
+        <div className="flex flex-col w-1/2  m-auto mt-10">
+            <table className=" text-left w-full">
+                <thead>
+                    <tr className=" bg-slate-100 border-b border-slate-300">
+                        <th className="px-4 py-2 ">Block</th>
+                        <th className="px-4 py-2 ">Txn</th>
+                        <th className="px-4 py-2 ">Gas Used</th>
+                        <th className="px-4 py-2 ">Gas Limit</th>
+                        <th className="px-4 py-2 ">Base Fee</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr className=" border-b border-slate-300">
+                        <td className="px-4 py-2 cursor-pointer text-blue-400">
+                            {transactions ? blockNumber : "Loading"}
+                        </td>
+                        <td className="px-4 py-2 cursor-pointer text-blue-400">
+                            {transactions
+                                ? transactions.transactions.length
+                                : "Loading"}
+                        </td>
+
+                        <td className="px-4 py-2 ">
+                            {transactions
+                                ? parseInt(
+                                      transactions.gasUsed._hex,
+                                      16
+                                  ).toLocaleString()
+                                : "Loading"}
+                        </td>
+                        <td className="px-4 py-2 ">
+                            {transactions
+                                ? parseInt(
+                                      transactions.gasLimit._hex,
+                                      16
+                                  ).toLocaleString()
+                                : "Loading"}
+                        </td>
+                        <td className="px-4 py-2 ">
+                            {transactions ? `${formatted} Gwei` : "Loading"}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div className="flex px-2 mx-auto w-full bg-slate-50 justify-between">
+                <button>{"<"}</button>
+                <button>{">"}</button>
+            </div>
+        </div>
+    );
 }
 
 export default App;
