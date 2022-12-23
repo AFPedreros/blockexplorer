@@ -17,6 +17,7 @@ const settings = {
 const alchemy = new Alchemy(settings);
 
 function App() {
+    const [lastBlock, setLastBlock] = useState();
     const [blockNumber, setBlockNumber] = useState();
     const [transactions, setTransactions] = useState();
 
@@ -24,6 +25,7 @@ function App() {
 
     useEffect(() => {
         async function getBlockNumber() {
+            setLastBlock(await alchemy.core.getBlockNumber());
             setBlockNumber(await alchemy.core.getBlockNumber());
         }
 
@@ -38,7 +40,14 @@ function App() {
         }
 
         getBlockTransactions();
-    }, []);
+    }, [blockNumber]);
+
+    function getPrevBlock() {
+        setBlockNumber((block) => block - 1);
+    }
+    function getNextBlock() {
+        setBlockNumber((block) => block + 1);
+    }
 
     if (transactions) {
         const baseFee = parseInt(transactions.baseFeePerGas._hex, 16);
@@ -47,7 +56,7 @@ function App() {
     }
 
     return (
-        <div className="flex flex-col w-1/2  m-auto mt-10">
+        <div className="flex flex-col w-full  m-auto p-10">
             <table className=" text-left w-full">
                 <thead>
                     <tr className=" bg-slate-100 border-b border-slate-300">
@@ -92,8 +101,18 @@ function App() {
                 </tbody>
             </table>
             <div className="flex px-2 mx-auto w-full bg-slate-50 justify-between">
-                <button>{"<"}</button>
-                <button>{">"}</button>
+                <button onClick={getPrevBlock}>{"<"}</button>
+                {lastBlock === blockNumber ? (
+                    <button
+                        className="text-slate-300"
+                        disabled={true}
+                        onClick={getNextBlock}
+                    >
+                        {">"}
+                    </button>
+                ) : (
+                    <button onClick={getNextBlock}>{">"}</button>
+                )}
             </div>
         </div>
     );
