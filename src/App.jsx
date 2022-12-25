@@ -45,8 +45,13 @@ function App() {
     function getPrevBlock() {
         setBlockNumber((block) => block - 1);
     }
+
     function getNextBlock() {
         setBlockNumber((block) => block + 1);
+    }
+
+    function seeBlockTransactions() {
+        console.log(transactions.transactions);
     }
 
     if (transactions) {
@@ -72,7 +77,10 @@ function App() {
                         <td className="px-4 py-2 cursor-pointer text-blue-400">
                             {transactions ? blockNumber : "Loading"}
                         </td>
-                        <td className="px-4 py-2 cursor-pointer text-blue-400">
+                        <td
+                            onClick={seeBlockTransactions}
+                            className="px-4 py-2 cursor-pointer text-blue-400"
+                        >
                             {transactions
                                 ? transactions.transactions.length
                                 : "Loading"}
