@@ -60,7 +60,7 @@ function App() {
         const blockTransactions = transactions.transactions;
 
         const tenRows = blockTransactions.map((tx, index) => {
-            console.log(Utils.formatEther(tx.value.toString()));
+            // console.log(Utils.formatEther(tx.value.toString()));
             const ethValue = parseInt(tx.value._hex, 16);
             const rounded = Math.round(ethValue * 100) / 100000000000;
             formatted = rounded.toFixed(2);
