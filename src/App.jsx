@@ -1,4 +1,5 @@
-import { Alchemy, Network, Utils } from "alchemy-sdk";
+import { Alchemy, Network } from "alchemy-sdk";
+import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 
 // Refer to the README doc for more information about using API
@@ -20,10 +21,8 @@ function App() {
     const [lastBlock, setLastBlock] = useState();
     const [blockNumber, setBlockNumber] = useState();
     const [transactions, setTransactions] = useState();
-    const [transactionsRows, setTransactionsRows] = useState();
+    const [transactionsTable, setTransactionsTable] = useState();
     const [toggle, setToggle] = useState(false);
-
-    let formatted = 0;
 
     useEffect(() => {
         async function getBlockNumber() {
@@ -58,33 +57,31 @@ function App() {
         setToggle((prev) => !prev);
 
         const blockTransactions = transactions.transactions;
+        const reversedTransactions = blockTransactions.reverse();
 
-        const tenRows = blockTransactions.map((tx, index) => {
-            // console.log(Utils.formatEther(tx.value.toString()));
-            const ethValue = parseInt(tx.value._hex, 16);
-            const rounded = Math.round(ethValue * 100) / 100000000000;
-            formatted = rounded.toFixed(2);
-
+        const tenRows = reversedTransactions.map((tx, index) => {
             return (
                 <tr key={index} className=" border-b border-slate-300">
                     <td className="px-4 py-2">
                         {`${tx.hash.substring(0, 20)}...`}
                     </td>
-                    <td onClick={seeBlockTransactions} className="px-4 py-2">
+                    <td onClick={null} className="px-4 py-2">
                         {`${tx.from.substring(0, 20)}...`}
                     </td>
 
                     <td className="px-4 py-2 ">
-                        {`${tx.to.substring(0, 20)}...`}
+                        {tx.to ? `${tx.to.substring(0, 20)}...` : ""}
                     </td>
-                    <td className="px-4 py-2 ">{`${formatted} Ether`}</td>
+                    <td className="px-4 py-2 ">{`${ethers.utils.formatEther(
+                        tx.value
+                    )} Ether`}</td>
                 </tr>
             );
         });
 
-        setTransactionsRows(() => {
+        setTransactionsTable(() => {
             return (
-                <div className="flex flex-col w-fit px-10">
+                <div className="flex flex-col w-fit pb-10 px-10">
                     <table className=" text-left">
                         <thead>
                             <tr className=" bg-slate-100 border-b border-slate-300">
@@ -97,28 +94,25 @@ function App() {
                         <tbody>{tenRows}</tbody>
                     </table>
                     <div className="flex px-2 mx-auto w-full bg-slate-50 justify-between">
-                        <button onClick={getPrevBlock}>{"<"}</button>
-                        {lastBlock === blockNumber ? (
-                            <button
-                                className="text-slate-300"
-                                disabled={true}
-                                onClick={null}
-                            >
-                                {">"}
-                            </button>
-                        ) : (
-                            <button onClick={null}>{">"}</button>
-                        )}
+                        <button
+                            className="text-slate-300"
+                            disabled={true}
+                            onClick={null}
+                        >
+                            {"<"}
+                        </button>
+
+                        <button
+                            className="text-slate-300"
+                            disabled={true}
+                            onClick={null}
+                        >
+                            {">"}
+                        </button>
                     </div>
                 </div>
             );
         });
-    }
-
-    if (transactions) {
-        const baseFee = parseInt(transactions.baseFeePerGas._hex, 16);
-        const rounded = Math.round(baseFee * 100) / 100000000000;
-        formatted = rounded.toFixed(2);
     }
 
     return (
@@ -165,7 +159,14 @@ function App() {
                                     : "Loading"}
                             </td>
                             <td className="px-4 py-2 ">
-                                {transactions ? `${formatted} Gwei` : "Loading"}
+                                {transactions
+                                    ? `${ethers.utils
+                                          .formatUnits(
+                                              transactions.baseFeePerGas._hex,
+                                              "gwei"
+                                          )
+                                          .substring(0, 5)} Gwei`
+                                    : "Loading"}
                             </td>
                         </tr>
                     </tbody>
@@ -186,7 +187,7 @@ function App() {
                 </div>
             </div>
 
-            {toggle && transactionsRows}
+            {toggle && transactionsTable}
         </>
     );
 }
